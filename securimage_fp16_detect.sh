@@ -1,0 +1,1 @@
+python3 detect.py --weights ./checkpoints/securimage-416-fp16.tflite --size 416 --model yolov4 --image ./data/ccs8cc.png --framework tflite

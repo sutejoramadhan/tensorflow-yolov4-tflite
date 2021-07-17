@@ -12,6 +12,7 @@ import cv2
 import numpy as np
 from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
+from core.config import cfg
 
 flags.DEFINE_string('framework', 'tf', '(tf, tflite, trt')
 flags.DEFINE_string('weights', './checkpoints/yolov4-416',
@@ -78,12 +79,42 @@ def main(_argv):
         score_threshold=FLAGS.score
     )
     pred_bbox = [boxes.numpy(), scores.numpy(), classes.numpy(), valid_detections.numpy()]
-    image = utils.draw_bbox(original_image, pred_bbox)
+
+    # Print the result
+    tclasses = utils.read_class_names(cfg.YOLO.CLASSES)
+    pred_coords = pred_bbox[0][0].tolist()
+    pred_scores = pred_bbox[1][0].tolist()
+    pred_classes = pred_bbox[2][0].tolist()
+    """ for i in range(len(pred_scores)):
+        if(pred_scores[i] > 0):
+            print(tclasses[pred_classes[i]],pred_scores[i],pred_coords[i][1]) """
+
+    while len(pred_scores) > 6:
+        idx = pred_scores.index(min(pred_scores))
+        pred_scores.pop(idx)
+        pred_classes.pop(idx)
+        pred_coords.pop(idx)
+
+    res = []
+    for i in range(len(pred_scores)):
+        pred_coords[i] = pred_coords[i][1]
+        res.append({'object': tclasses[pred_classes[i]],'score':pred_scores[i],'x':pred_coords[i]})
+
+    res.sort(key=lambda x: x.get('x'))
+    resStr = ''
+    for i in range(len(res)):
+        resStr += res[i].get('object')
+
+    print(resStr)
+    # End print result
+
+    # Uncomment this to generate the image result
+    """ image = utils.draw_bbox(original_image, pred_bbox)
     # image = utils.draw_bbox(image_data*255, pred_bbox)
     image = Image.fromarray(image.astype(np.uint8))
     image.show()
     image = cv2.cvtColor(np.array(image), cv2.COLOR_BGR2RGB)
-    cv2.imwrite(FLAGS.output, image)
+    cv2.imwrite(FLAGS.output, image) """
 
 if __name__ == '__main__':
     try:
