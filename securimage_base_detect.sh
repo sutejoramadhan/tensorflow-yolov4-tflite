@@ -1,0 +1,1 @@
+python3 detect.py --weights ./checkpoints/securimage-base-416 --size 416 --model yolov4 --image ./data/ccs8cc.png
